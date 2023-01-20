@@ -1,0 +1,45 @@
+version: '3.7'
+services:
+  registry:
+    image: registry:2.7
+    ports:
+      - 5000:5000
+    volumes:
+      - ./registry-config/config.yml:/etc/docker/registry/config.yml
+      - registry-data:/var/lib/registry
+      - $CERTS_PATH:/certs
+    environment:
+      - REGISTRY_HTTP_ADDR=0.0.0.0:5000
+      - REGISTRY_HTTP_TLS_CERTIFICATE=/certs/services.infra.home.crt
+      - REGISTRY_HTTP_TLS_KEY=/certs/services.infra.home.key
+
+  registry-cache:
+    image: registry:2.7
+    ports:
+      - 5001:5001
+    volumes:
+      - ./registry-config/config-cache.yml:/etc/docker/registry/config.yml
+      - registry-cache-data:/var/lib/registry
+      - $CERTS_PATH:/certs
+    environment:
+      - REGISTRY_HTTP_ADDR=0.0.0.0:5001
+      - REGISTRY_HTTP_TLS_CERTIFICATE=/certs/services.infra.home.crt
+      - REGISTRY_HTTP_TLS_KEY=/certs/services.infra.home.key
+
+
+  ui:
+    image: joxit/docker-registry-ui:latest
+    ports:
+      - 5002:80
+    environment:
+      - REGISTRY_TITLE=My Private Docker Registry
+      - REGISTRY_URL=https://services.infra.home:5000
+      - SINGLE_REGISTRY=true
+    depends_on:
+      - registry
+
+volumes:
+  registry-data:
+    external: true
+  registry-cache-data:
+    external: true
